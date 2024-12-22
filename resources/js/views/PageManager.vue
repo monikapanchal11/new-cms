@@ -7,7 +7,9 @@
       <h2 class="text-xl font-semibold mb-2">{{ isEdit ? 'Edit Page' : 'Create Page' }}</h2>
       <form @submit.prevent="savePage">
         <div class="mb-4">
-          <label class="block font-medium mb-1">Parent Page</label>
+          <label class="block font-medium mb-1">
+            Parent Page
+          </label>
           <select v-model="form.parent_id" class="w-full border px-3 py-2 rounded">
             <option value="">Root</option>
             <option v-for="page in flatPages" :key="page.id" :value="page.id">
@@ -15,22 +17,61 @@
             </option>
           </select>
         </div>
+
         <div class="mb-4">
-          <label class="block font-medium mb-1">Title</label>
-          <input v-model="form.title" type="text" class="w-full border px-3 py-2 rounded" />
+          <label class="block font-medium mb-1">
+            Title <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="form.title"
+            type="text"
+            class="w-full border px-3 py-2 rounded"
+            :class="{'border-red-500': errors.title}"
+            @input="clearError('title')"
+          />
+          <p v-if="errors.title" class="text-red-500 text-sm">{{ errors.title }}</p>
         </div>
+
         <div class="mb-4">
-          <label class="block font-medium mb-1">Slug</label>
-          <input v-model="form.slug" type="text" class="w-full border px-3 py-2 rounded" />
+          <label class="block font-medium mb-1">
+            Slug <span class="text-red-500">*</span>
+          </label>
+          <input
+            v-model="form.slug"
+            type="text"
+            class="w-full border px-3 py-2 rounded"
+            :class="{'border-red-500': errors.slug}"
+            @input="clearError('slug')"
+          />
+          <p v-if="errors.slug" class="text-red-500 text-sm">{{ errors.slug }}</p>
         </div>
+
         <div class="mb-4">
-          <label class="block font-medium mb-1">Content</label>
-          <textarea v-model="form.content" rows="4" class="w-full border px-3 py-2 rounded"></textarea>
+          <label class="block font-medium mb-1">
+            Content <span class="text-red-500">*</span>
+          </label>
+          <textarea
+            v-model="form.content"
+            rows="4"
+            class="w-full border px-3 py-2 rounded"
+            :class="{'border-red-500': errors.content}"
+            @input="clearError('content')"
+          ></textarea>
+          <p v-if="errors.content" class="text-red-500 text-sm">{{ errors.content }}</p>
         </div>
-        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
+
+        <button
+          type="submit"
+          class="bg-blue-500 text-white px-4 py-2 rounded"
+        >
           {{ isEdit ? 'Update' : 'Create' }}
         </button>
-        <button v-if="isEdit" @click="resetForm" type="button" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">
+        <button
+          v-if="isEdit"
+          @click="resetForm"
+          type="button"
+          class="bg-gray-500 text-white px-4 py-2 rounded ml-2"
+        >
           Cancel
         </button>
       </form>
@@ -46,9 +87,10 @@
   </div>
 </template>
 
+
 <script>
-import axios from "axios";
 import { ref, reactive, onMounted, computed } from "vue";
+import axios from "axios";
 import TreeView from "../../components/TreeView.vue";
 
 export default {
@@ -66,6 +108,11 @@ export default {
     });
     const isEdit = ref(false);
     const editId = ref(null);
+    const errors = reactive({
+      title: "",
+      slug: "",
+      content: "",
+    });
 
     // Fetch pages
     const fetchPages = () => {
@@ -78,8 +125,19 @@ export default {
         });
     };
 
+    // Validation function
+    const validateForm = () => {
+      errors.title = form.title.trim() === "" ? "Title is required" : "";
+      errors.slug = form.slug.trim() === "" ? "Slug is required" : "";
+      errors.content = form.content.trim() === "" ? "Content is required" : "";
+
+      return !Object.values(errors).some((error) => error !== "");
+    };
+
     // Save page (create or update)
     const savePage = () => {
+      if (!validateForm()) return; // Stop if validation fails
+
       const url = isEdit.value ? `/api/pages/${editId.value}` : "/api/pages";
       const method = isEdit.value ? "put" : "post";
 
@@ -101,6 +159,9 @@ export default {
       form.title = page.title;
       form.slug = page.slug;
       form.content = page.content;
+      errors.title = "";
+      errors.slug = "";
+      errors.content = "";
     };
 
     // Delete page
@@ -124,6 +185,9 @@ export default {
       form.title = "";
       form.slug = "";
       form.content = "";
+      errors.title = "";
+      errors.slug = "";
+      errors.content = "";
     };
 
     // Flatten pages for the parent dropdown
@@ -142,6 +206,11 @@ export default {
     // Computed property to get flattened pages
     const flatPages = computed(() => flattenPages(pages.value));
 
+    // Clear error when the user starts typing
+    const clearError = (field) => {
+      errors[field] = "";
+    };
+
     // Lifecycle hooks
     onMounted(() => {
       fetchPages();
@@ -158,9 +227,12 @@ export default {
       deletePage,
       resetForm,
       flatPages, // Make flattened pages available to the template
+      errors, // Expose errors for use in the template
+      clearError, // Expose clearError function
     };
   },
 };
+
 </script>
 
 <style scoped>
