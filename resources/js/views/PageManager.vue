@@ -1,154 +1,168 @@
 <template>
-    <div class="p-6">
-      <h1 class="text-3xl font-bold mb-4">Page Management</h1>
-  
-      <!-- Create/Edit Form -->
-      <div class="mb-6 border p-4 rounded bg-gray-50">
-        <h2 class="text-xl font-semibold mb-2">{{ isEdit ? 'Edit Page' : 'Create Page' }}</h2>
-        <form @submit.prevent="savePage">
-          <div class="mb-4">
-            <label class="block font-medium mb-1">Parent Page</label>
-            <select v-model="form.parent_id" class="w-full border px-3 py-2 rounded">
-              <option value="">Root</option>
-              <option v-for="page in pages" :key="page.id" :value="page.id">
-                {{ page.title }}
-              </option>
-            </select>
-          </div>
-          <div class="mb-4">
-            <label class="block font-medium mb-1">Title</label>
-            <input v-model="form.title" type="text" class="w-full border px-3 py-2 rounded" />
-          </div>
-          <div class="mb-4">
-            <label class="block font-medium mb-1">Slug</label>
-            <input v-model="form.slug" type="text" class="w-full border px-3 py-2 rounded" />
-          </div>
-          <div class="mb-4">
-            <label class="block font-medium mb-1">Content</label>
-            <textarea v-model="form.content" rows="4" class="w-full border px-3 py-2 rounded"></textarea>
-          </div>
-          <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
-            {{ isEdit ? 'Update' : 'Create' }}
-          </button>
-          <button v-if="isEdit" @click="resetForm" type="button" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">
-            Cancel
-          </button>
-        </form>
-      </div>
-  
-      <!-- Page List -->
-      <div>
-        <h2 class="text-xl font-semibold mb-2">Page List</h2>
-        <ul class="border p-4 rounded bg-gray-50">
-          <TreeView :pages="pages" @edit="editPage" @delete="deletePage" />
-        </ul>
-      </div>
+  <div class="p-6 max-w-4xl mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Page Management</h1>
+
+    <!-- Create/Edit Form -->
+    <div class="mb-6 border p-4 rounded bg-gray-50">
+      <h2 class="text-xl font-semibold mb-2">{{ isEdit ? 'Edit Page' : 'Create Page' }}</h2>
+      <form @submit.prevent="savePage">
+        <div class="mb-4">
+          <label class="block font-medium mb-1">Parent Page</label>
+          <select v-model="form.parent_id" class="w-full border px-3 py-2 rounded">
+            <option value="">Root</option>
+            <option v-for="page in flatPages" :key="page.id" :value="page.id">
+              {{ page.title }}
+            </option>
+          </select>
+        </div>
+        <div class="mb-4">
+          <label class="block font-medium mb-1">Title</label>
+          <input v-model="form.title" type="text" class="w-full border px-3 py-2 rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="block font-medium mb-1">Slug</label>
+          <input v-model="form.slug" type="text" class="w-full border px-3 py-2 rounded" />
+        </div>
+        <div class="mb-4">
+          <label class="block font-medium mb-1">Content</label>
+          <textarea v-model="form.content" rows="4" class="w-full border px-3 py-2 rounded"></textarea>
+        </div>
+        <button type="submit" class="bg-blue-500 text-white px-4 py-2 rounded">
+          {{ isEdit ? 'Update' : 'Create' }}
+        </button>
+        <button v-if="isEdit" @click="resetForm" type="button" class="bg-gray-500 text-white px-4 py-2 rounded ml-2">
+          Cancel
+        </button>
+      </form>
     </div>
-  </template>
-  
-  <script>
-  import axios from "axios";
-  import { ref, reactive, onMounted } from "vue";
-  import TreeView from "../../components/TreeView.vue";
-  
-  export default {
-    name: 'PageManager',
-    components: {
-      TreeView,
-    },
-    setup() {
-      // Reactive state variables
-      const pages = ref([]);
-      const form = reactive({
-        parent_id: null,
-        title: "",
-        slug: "",
-        content: "",
-      });
-      const isEdit = ref(false);
-      const editId = ref(null);
-  
-      // Fetch pages
-      const fetchPages = () => {
-        axios.get("/api/pages")
-          .then((res) => {
-            pages.value = res.data;
-          })
-          .catch((error) => {
-            console.error("Error fetching pages:", error);
-          });
-      };
-  
-      // Save page (create or update)
-      const savePage = () => {
-        const url = isEdit.value ? `/api/pages/${editId.value}` : "/api/pages";
-        const method = isEdit.value ? "put" : "post";
-  
-        axios[method](url, form)
+
+    <!-- Page List -->
+    <div>
+      <h2 class="text-xl font-semibold mb-2">Page List</h2>
+      <ul class="border p-4 rounded bg-gray-50">
+        <TreeView :pages="pages" @edit="editPage" @delete="deletePage" />
+      </ul>
+    </div>
+  </div>
+</template>
+
+<script>
+import axios from "axios";
+import { ref, reactive, onMounted, computed } from "vue";
+import TreeView from "../../components/TreeView.vue";
+
+export default {
+  name: 'PageManager',
+  components: {
+    TreeView,
+  },
+  setup() {
+    const pages = ref([]);
+    const form = reactive({
+      parent_id: null,
+      title: "",
+      slug: "",
+      content: "",
+    });
+    const isEdit = ref(false);
+    const editId = ref(null);
+
+    // Fetch pages
+    const fetchPages = () => {
+      axios.get("/api/pages")
+        .then((res) => {
+          pages.value = res.data;
+        })
+        .catch((error) => {
+          console.error("Error fetching pages:", error);
+        });
+    };
+
+    // Save page (create or update)
+    const savePage = () => {
+      const url = isEdit.value ? `/api/pages/${editId.value}` : "/api/pages";
+      const method = isEdit.value ? "put" : "post";
+
+      axios[method](url, form)
+        .then(() => {
+          fetchPages();
+          resetForm();
+        })
+        .catch((error) => {
+          console.error("Error saving page:", error);
+        });
+    };
+
+    // Edit page (set form for editing)
+    const editPage = (page) => {
+      isEdit.value = true;
+      editId.value = page.id;
+      form.parent_id = page.parent_id || null;
+      form.title = page.title;
+      form.slug = page.slug;
+      form.content = page.content;
+    };
+
+    // Delete page
+    const deletePage = (id) => {
+      if (confirm("Are you sure you want to delete this page?")) {
+        axios.delete(`/api/pages/${id}`)
           .then(() => {
             fetchPages();
-            resetForm();
           })
           .catch((error) => {
-            console.error("Error saving page:", error);
+            console.error("Error deleting page:", error);
           });
-      };
-  
-      // Edit page (set form for editing)
-      const editPage = (page) => {
-        isEdit.value = true;
-        editId.value = page.id;
-        form.parent_id = page.parent_id || null;
-        form.title = page.title;
-        form.slug = page.slug;
-        form.content = page.content;
-      };
-  
-      // Delete page
-      const deletePage = (id) => {
-        if (confirm("Are you sure you want to delete this page?")) {
-          axios.delete(`/api/pages/${id}`)
-            .then(() => {
-              fetchPages();
-            })
-            .catch((error) => {
-              console.error("Error deleting page:", error);
-            });
+      }
+    };
+
+    // Reset form (clear editing state)
+    const resetForm = () => {
+      isEdit.value = false;
+      editId.value = null;
+      form.parent_id = null;
+      form.title = "";
+      form.slug = "";
+      form.content = "";
+    };
+
+    // Flatten pages for the parent dropdown
+    const flattenPages = (pages, parentId = null, prefix = '') => {
+      let flatPages = [];
+      pages.forEach(page => {
+        const flattenedPage = { ...page, title: prefix + page.title };
+        flatPages.push(flattenedPage);
+        if (page.children && page.children.length > 0) {
+          flatPages = flatPages.concat(flattenPages(page.children, page.id, prefix + '— '));
         }
-      };
-  
-      // Reset form (clear editing state)
-      const resetForm = () => {
-        isEdit.value = false;
-        editId.value = null;
-        form.parent_id = null;
-        form.title = "";
-        form.slug = "";
-        form.content = "";
-      };
-  
-      // Lifecycle hooks
-      onMounted(() => {
-        fetchPages();
       });
-  
-      // Return all the variables and methods
-      return {
-        pages,
-        form,
-        isEdit,
-        editId,
-        fetchPages,
-        savePage,
-        editPage,
-        deletePage,
-        resetForm,
-      };
-    },
-  };
-  </script>
-  
-  <style scoped>
-  /* Add any additional styling here */
-  </style>
-  
+      return flatPages;
+    };
+
+    // Computed property to get flattened pages
+    const flatPages = computed(() => flattenPages(pages.value));
+
+    // Lifecycle hooks
+    onMounted(() => {
+      fetchPages();
+    });
+
+    return {
+      pages,
+      form,
+      isEdit,
+      editId,
+      fetchPages,
+      savePage,
+      editPage,
+      deletePage,
+      resetForm,
+      flatPages, // Make flattened pages available to the template
+    };
+  },
+};
+</script>
+
+<style scoped>
+/* Add any additional styling here */
+</style>

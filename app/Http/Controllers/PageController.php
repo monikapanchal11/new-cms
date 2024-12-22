@@ -9,9 +9,21 @@ class PageController extends Controller
 {
     public function index()
     {
-        $pages = Page::with('children')->whereNull('parent_id')->get();
+        $pages = Page::whereNull('parent_id')->get();  // Get top-level pages (no parent)
+    
+        $pages = $this->loadChildren($pages);
+    
         return response()->json($pages);
     }
+    
+    private function loadChildren($pages)
+    {
+        return $pages->map(function ($page) {
+            $page->children = $this->loadChildren($page->children);  
+            return $page;
+        });
+    }
+    
 
     public function store(Request $request)
     {
@@ -57,22 +69,32 @@ class PageController extends Controller
     {
         // Split the slug by "/" to get the nested structure
         $slugs = explode('/', $slug);
-
-        // Start with top-level pages
+    
+        // Start with the first slug
         $page = null;
-
+    
         foreach ($slugs as $slugPart) {
             $page = Page::where('slug', $slugPart)
                 ->when($page, function ($query) use ($page) {
                     $query->where('parent_id', $page->id);
                 })
                 ->first();
-
+    
             if (!$page) {
                 abort(404); // Page not found
             }
         }
+    
+        $page->children = $this->getChildren($page->id);
+  
         return response()->json($page);
     }
+    
+    protected function getChildren($parentId)
+    {
+        return Page::where('parent_id', $parentId)
+                   ->get();
+    }
+    
 }
 

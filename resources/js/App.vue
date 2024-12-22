@@ -1,6 +1,6 @@
 <template>
     <div>
-        <router-view /> <!-- Render the current route's component -->
+        <router-view /> 
     </div>
 </template>
 
