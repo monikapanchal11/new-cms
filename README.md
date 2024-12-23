@@ -1,5 +1,5 @@
 
-# Project Name: Dynamic Tree and Nested Cms
+# Dynamic Tree and Nested Cms
 
 ## Table of Contents
 - [Project Setup](#project-setup)
@@ -122,7 +122,6 @@ This solution enables the dynamic rendering of a tree structure with an arbitrar
 
 Here is a brief overview of the important files in the project:
 
-```
 /app
   /Http
     /Controllers
