@@ -9,7 +9,7 @@ class PageController extends Controller
 {
     public function index()
     {
-        $pages = Page::whereNull('parent_id')->get();  // Get top-level pages (no parent)
+        $pages = Page::whereNull('parent_id')->get();  
     
         $pages = $this->loadChildren($pages);
     
@@ -38,12 +38,6 @@ class PageController extends Controller
         return response()->json($page);
     }
 
-    // public function show($id)
-    // {
-    //     $page = Page::with('children')->findOrFail($id);
-    //     return response()->json($page);
-    // }
-
     public function update(Request $request, $id)
     {
         $page = Page::findOrFail($id);
@@ -67,10 +61,8 @@ class PageController extends Controller
 
     public function show($slug)
     {
-        // Split the slug by "/" to get the nested structure
         $slugs = explode('/', $slug);
     
-        // Start with the first slug
         $page = null;
     
         foreach ($slugs as $slugPart) {
@@ -81,7 +73,7 @@ class PageController extends Controller
                 ->first();
     
             if (!$page) {
-                abort(404); // Page not found
+                abort(404); 
             }
         }
     

@@ -8,8 +8,9 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-// Route::get('/admin/pages', function () {
-//     return view('pages'); // This will serve the Vue-based CRUD view
-// })->name('pages');
 
-Route::get('/{slug}', [PageController::class, 'show'])->where('slug', '.*');
+Route::get('api/{slug}', [PageController::class, 'show'])->where('slug', '.*');
+
+Route::get('/{any}', function () {
+    return view('app'); 
+})->where('any', '.*');
